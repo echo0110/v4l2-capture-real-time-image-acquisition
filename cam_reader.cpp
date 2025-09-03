@@ -10,9 +10,10 @@
 #include <linux/videodev2.h>
 #include <opencv2/opencv.hpp>
 
+ // 修改 Buffer 结构以支持多平面
 struct Buffer {
-    void* start;
-    size_t length;
+    void* start[VIDEO_MAX_PLANES];
+    size_t length[VIDEO_MAX_PLANES];
 };
 
 int read_cam(int width, int height, int fps) {
@@ -68,25 +69,32 @@ int read_cam(int width, int height, int fps) {
         close(fd);
         return -1;
     }
-
+    printf("func is %s,%d\n",__func__,__LINE__);
     std::vector<Buffer> buffers(req.count);
     for (size_t i = 0; i < req.count; i++) {
         struct v4l2_buffer buf;
         struct v4l2_plane planes[1];
         memset(&buf, 0, sizeof(buf));
         memset(&planes, 0, sizeof(planes));
+
         buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
         buf.memory = V4L2_MEMORY_MMAP;
         buf.index = i;
-
+        buf.m.planes = planes;
+        buf.length = 1;  // 平面数量
+        printf("func is %s,%d\n",__func__,__LINE__);
         if (ioctl(fd, VIDIOC_QUERYBUF, &buf) < 0) {
             perror("VIDIOC_QUERYBUF");
             close(fd);
             return -1;
         }
-
-        buffers[i].length = buf.length;
-        buffers[i].start = mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, buf.m.offset);
+        printf("func is %s,%d\n",__func__,__LINE__);
+        // 为每个平面分配内存
+        buffers[i].length[0] = buf.m.planes[0].length;
+        buffers[i].start[0] = mmap(NULL, buf.m.planes[0].length,
+                                 PROT_READ | PROT_WRITE,
+                                 MAP_SHARED, fd,
+                                 buf.m.planes[0].m.mem_offset);
 
         if (buffers[i].start == MAP_FAILED) {
             perror("mmap");
@@ -102,7 +110,7 @@ int read_cam(int width, int height, int fps) {
     }
 
     // Step 5: Start streaming
-    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
     if (ioctl(fd, VIDIOC_STREAMON, &type) < 0) {
         perror("VIDIOC_STREAMON");
         close(fd);
@@ -114,8 +122,15 @@ int read_cam(int width, int height, int fps) {
 
     while (true) {
         struct v4l2_buffer buf;
-        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        struct v4l2_plane planes[1];
+        memset(&buf, 0, sizeof(buf));
+        memset(planes, 0, sizeof(planes));
+
+        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
         buf.memory = V4L2_MEMORY_MMAP;
+
+        buf.m.planes = planes;
+        buf.length = 1;
 
         if (ioctl(fd, VIDIOC_DQBUF, &buf) < 0) {
             perror("VIDIOC_DQBUF");
@@ -123,7 +138,7 @@ int read_cam(int width, int height, int fps) {
         }
 
         // Convert raw GREY image to OpenCV Mat
-        cv::Mat frame(height, width, CV_8UC1, buffers[buf.index].start);
+        cv::Mat frame(height, width, CV_8UC1, buffers[buf.index].start[0]);
         std::cout << "Received frame: " << frame.cols << "x" << frame.rows << std::endl;
 
         cv::imshow("demo", frame);
@@ -139,9 +154,12 @@ int read_cam(int width, int height, int fps) {
     }
 
     // Step 7: Clean up
-    ioctl(fd, VIDIOC_STREAMOFF, &type);
+    if (ioctl(fd, VIDIOC_STREAMOFF, &type) < 0) {
+        perror("VIDIOC_STREAMOFF");
+    }
+    
     for (size_t i = 0; i < buffers.size(); i++) {
-        munmap(buffers[i].start, buffers[i].length);
+        munmap(buffers[i].start[0], buffers[i].length[0]);
     }
     close(fd);
     cv::destroyAllWindows();
