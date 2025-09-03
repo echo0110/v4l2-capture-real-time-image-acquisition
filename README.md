@@ -1,4 +1,4 @@
-当然可以！以下是一个针对 [echo0110/v4l2-capture-real-time-image-acquisition](https://github.com/echo0110/v4l2-capture-real-time-image-acquisition) 项目的 README 示例，涵盖项目简介、功能、依赖、编译与运行方法等内容。你可以根据实际情况进行补充或修改。
+
 
 ---
 
