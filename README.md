@@ -1,62 +1,59 @@
-
-
 ---
 
 # v4l2-capture-real-time-image-acquisition
 
-## 项目简介
+## Project Overview
 
-本项目基于 **V4L2（Video4Linux2）** 框架，旨在实现实时图像采集。通过操作 Linux 下的摄像头设备，能够高效地获取图像数据并进行处理，适用于嵌入式系统、监控、机器人视觉等场景。
+This project is based on the **V4L2 (Video4Linux2)** framework and aims to achieve real-time image acquisition. By operating camera devices under Linux, it efficiently captures and processes image data, making it suitable for embedded systems and applications requiring real-time vision.
 
-## 功能特点
+## Features
 
-- 支持实时摄像头图像采集
-- 基于 V4L2 API，稳定高效
-- 可配置采集参数（分辨率、帧率等）
-- 简单易用，代码结构清晰
-- 易于集成到其他项目中
+- Supports real-time camera image acquisition
+- Stable and efficient, based on V4L2 API
+- Configurable acquisition parameters (resolution, frame rate, etc.)
+- Simple and clear code structure
+- Easy to integrate into other projects
 
-## 代码结构
+## Code Structure
 
-- `cam_reader.cpp`：核心采集逻辑，负责摄像头初始化、数据采集与释放等操作
-- `Makefile`：项目编译脚本（如有）
-- 其他辅助文件
+- `cam_reader.cpp`: Core acquisition logic, responsible for camera initialization, data acquisition, and resource release
+- `Makefile`: Project build script (if available)
+- Other auxiliary files
 
-## 环境依赖
+## Environment Dependencies
 
-- Linux 系统
-- 安装 V4L2 相关开发库
+- Linux system
+- V4L2 development library installed
     ```bash
     sudo apt-get install libv4l-dev
     ```
-- C++ 编译器（如 `g++`）
+- C++ compiler (e.g., `g++`)
 
-## 编译方法
+## Build Instructions
 
-在项目根目录下执行：
+In the project root directory, execute:
 
 ```bash
 g++ -o cam_reader cam_reader.cpp -lv4l2
 ```
 
-## 运行方法
+## Run Instructions
 
-插入摄像头设备，并运行：
+Plug in the camera device and run:
 
 ```bash
 ./cam_reader
 ```
 
-如需指定设备或参数，请根据代码实际情况进行设置或修改。
+To specify devices or parameters, please set or modify them according to the actual code.
 
-## 适用场景
+## Application Scenarios
 
-- 实时图像采集与处理
-- 机器视觉、智能监控
-- 嵌入式 Linux 设备开发
+- Real-time image acquisition and processing
+- Machine vision, intelligent surveillance
+- Embedded Linux device development
 
-## 参考与文档
+## References & Documentation
 
-- [V4L2 官方文档](https://linuxtv.org/downloads/v4l-dvb-apis/)
-- [cam_reader.cpp 源码](./cam_reader.cpp)
-
+- [V4L2 Official Documentation](https://linuxtv.org/downloads/v4l-dvb-apis/)
+- [cam_reader.cpp Source Code](./cam_reader.cpp)
